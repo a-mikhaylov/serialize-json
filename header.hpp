@@ -7,6 +7,7 @@
 
 #define A_FILE   "A_struct.json"
 #define B_FILE   "B_struct.json"
+#define SUB_FILE "SUB_AB.json"
 
 using json = nlohmann::json;
 using namespace std;
@@ -25,6 +26,24 @@ json merge(const json &a, const json &b)
     return result.unflatten();
 }
 
+json mergeSub(const json &base, const json &dist) {
+    json to_add;
+    to_add = to_add.flatten();
+    json result = base.flatten();
+    json tmp = dist.flatten();
+    
+    for (json::iterator it = tmp.begin(); it != tmp.end(); ++it)
+    {
+        to_add[it.key()] = it.value();
+    }
+    
+    result = result.unflatten();
+    to_add = to_add.unflatten();
+    result["Added"] = to_add;
+    
+    return result;
+}
+
 class A {
 public:
 	int32_t k;
@@ -34,17 +53,19 @@ public:
 
 	A(int window) {
 		this->k = window;
+        for (int i = 0; i < 10; i++) a[i] = rand() % 10;
 	}
     A() {
 		this->k = 987;
 	}
 
-    void printA() {
-        std::cerr << "k:\t" << k << std::endl;
-        std::cerr << "a:";
+    void printA(std::string name) {
+        cerr << name << ":" << endl;
+        cerr << "\tk:\t" << k << endl;
+        cerr << "\ta:" << endl;;
 
         for (int i = 0; i < 10; i++) {
-            std::cerr << '\t' << a[i] << std::endl;
+            cerr << "\t\t" << a[i] << endl;
         }
         cerr << endl;
     }
@@ -63,10 +84,13 @@ public:
         std::ifstream inp(A_FILE);
         if (!inp.is_open()) return;
         json ji;
-
         inp >> ji;
         from_json(ji, *this);
         return;    
+    }
+
+    void Load(const json &base) { 
+        from_json(base, *this); 
     }
 
 };
@@ -83,16 +107,17 @@ public:
     B() {
         this->x = 0;
         this->y = 1;
-        ptr = nullptr;
+        ptr = new A();
     }
 
     B(A* base) : x(base->k), y(base->k), ptr(base) {}
 
-    void printB() {
-        cerr << "x:\t" << x << endl
-             << "y:\t" << y << endl
-             << "*ptr:\t";
-        if (ptr != nullptr) ptr->printA();
+    void printB(std::string name) {
+        cerr << name << ":" << endl;
+        cerr << "\tx:\t" << x << endl
+             << "\ty:\t" << y << endl
+             << "\t*ptr:";
+        if (ptr != nullptr) ptr->printA("*ptr");
         cerr << endl;
     }
 
@@ -110,10 +135,23 @@ public:
         std::ifstream inp(B_FILE);
         if (!inp.is_open()) return;
         json ji;
-
         inp >> ji;
         from_json(ji, *this);
         return;    
+    }
+
+    void Load_full() {
+        std::ifstream inp(SUB_FILE);
+        if (!inp.is_open()) return;
+        json ji;
+        inp >> ji;
+
+        json jA = ji["Added"];
+        ptr->Load(jA);
+
+        ji.erase("Added");
+        from_json(ji, *this);
+        return;
     }
 };
 
