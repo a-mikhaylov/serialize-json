@@ -26,7 +26,7 @@ json merge(const json &a, const json &b)
     return result.unflatten();
 }
 
-json mergeSub(const json &base, const json &dist) {
+json mergeSub(const json &base, const json &dist, string name) {
     json to_add;
     to_add = to_add.flatten();
     json result = base.flatten();
@@ -39,7 +39,7 @@ json mergeSub(const json &base, const json &dist) {
     
     result = result.unflatten();
     to_add = to_add.unflatten();
-    result["Added"] = to_add;
+    result[name] = to_add;
     
     return result;
 }
@@ -97,6 +97,7 @@ public:
     
 class B {
 public:
+    bool need_clean = false;
     int x;
     int y;
     A* ptr;
@@ -107,7 +108,7 @@ public:
     B() {
         this->x = 0;
         this->y = 1;
-        ptr = new A();
+        ptr = new A(); need_clean = true;
     }
 
     B(A* base) : x(base->k), y(base->k), ptr(base) {}
@@ -131,6 +132,18 @@ public:
         out.close();
     }
 
+    void Save_full() {
+        std::ofstream out(SUB_FILE);
+        json j, to_add;
+
+        to_json(to_add, *ptr);
+        to_json(j, *this);
+        j = mergeSub(j, to_add, "*ptr");
+
+        out << j.dump(4) << std::endl;
+        out.close();
+    }
+
     void Load() {
         std::ifstream inp(B_FILE);
         if (!inp.is_open()) return;
@@ -146,16 +159,16 @@ public:
         json ji;
         inp >> ji;
 
-        json jA = ji["Added"];
+        json jA = ji["*ptr"];
         ptr->Load(jA);
 
-        ji.erase("Added");
+        ji.erase("*ptr");
         from_json(ji, *this);
         return;
     }
     ~B() { 
-        if (ptr != nullptr) {
-            delete ptr;
+        if (need_clean) {
+            delete [] ptr;
             ptr = nullptr;
         }
     }

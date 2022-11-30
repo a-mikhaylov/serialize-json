@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     json jBmerge; to_json(jBmerge, bbb);
 
     jBmerge = merge(jA, jBmerge);
-    jBsub = mergeSub(jBsub, jA);
+    jBsub = mergeSub(jBsub, jA, "A");
     
     ofstream outs("test_Sub.json");
     ofstream outm("test_Merge.json");
@@ -33,10 +33,9 @@ int main(int argc, char* argv[]) {
     outB << jB.dump(4) << std::endl; outB.close();
 
     //загрузка B вместе с A
-    ofstream outSub(SUB_FILE);
-    outSub << jBsub.dump(4) << std::endl; outSub.close();
-
+    bbb.Save_full();
     B bSPars; bSPars.Load_full();
+
     bSPars.printB("B Parsed with A");
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
