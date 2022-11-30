@@ -153,6 +153,12 @@ public:
         from_json(ji, *this);
         return;
     }
+    ~B() { 
+        if (ptr != nullptr) {
+            delete ptr;
+            ptr = nullptr;
+        }
+    }
 };
 
 
